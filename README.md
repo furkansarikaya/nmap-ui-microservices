@@ -219,7 +219,7 @@ terraform apply
 
 ## 📄 Lisans
 
-Bu proje MIT Lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE) dosyasına bakın.
+Bu proje MIT Lisansı altında lisanslanmıştır - detaylar için [LICENSE](LICENSE.md) dosyasına bakın.
 
 ---
 
