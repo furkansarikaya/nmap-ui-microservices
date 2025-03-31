@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scanner-service
+  namespace: nmap-ui
+  labels:
+    app: scanner-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: scanner-service
+  template:
+    metadata:
+      labels:
+        app: scanner-service
+    spec:
+      containers:
+        - name: scanner-service
+          image: scanner-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: http
+            - containerPort: 9081
+              name: grpc
+          env:
+            - name: SCANNER_SERVER_HTTP_PORT
+              value: "8081"
+            - name: SCANNER_SERVER_GRPC_PORT
+              value: "9081"
+            - name: SCANNER_LOG_LEVEL
+              value: "info"
+            - name: SCANNER_LOG_FORMAT
+              value: "json"
+            - name: SCANNER_NMAP_MAX_CONCURRENT_SCANS
+              value: "5"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "512Mi"
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/configs
+      volumes:
+        - name: config-volume
+          configMap:
+            name: scanner-service-config

@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  scanner-service:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+    ports:
+      - "8081:8081"
+      - "9081:9081"
+    environment:
+      - SCANNER_SERVER_HTTP_PORT=8081
+      - SCANNER_SERVER_GRPC_PORT=9081
+      - SCANNER_LOG_LEVEL=debug
+      - SCANNER_LOG_FORMAT=console
+      - SCANNER_NMAP_MAX_CONCURRENT_SCANS=5
+    volumes:
+      - ../../configs:/app/configs
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined  # gerekli olabilir, nmap bazen root yetkisi isteyebilir
+    cap_add:
+      - NET_ADMIN  # Bazı nmap taramaları için gerekli
+      - NET_RAW    # RAW soketler için gerekli

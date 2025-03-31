@@ -1,0 +1,29 @@
+app:
+  name: scanner-service
+  version: 0.1.0
+
+server:
+  http:
+    port: 8081
+    timeout: 30s
+    read_timeout: 15s
+    write_timeout: 15s
+  grpc:
+    port: 9081
+    timeout: 30s
+
+nmap:
+  path: nmap  # Varsayılan olarak PATH'ten çalıştır, özelleştirilebilir
+  timeout: 300s  # Taramalar için varsayılan zaman aşımı (5 dakika)
+  max_concurrent_scans: 5  # Aynı anda çalıştırılabilecek maksimum tarama sayısı
+
+log:
+  level: debug  # debug, info, warn, error, fatal
+  format: json  # json veya console
+  output: stdout  # stdout veya dosya yolu
+
+# İlk aşamada in-memory depolama kullanacağız
+# Daha sonra gerçek veritabanına geçiş yapabiliriz
+storage:
+  type: memory  # memory, postgres, redis vb.
+  retention_period: 168h  # Tarama sonuçlarının saklanma süresi (7 gün)

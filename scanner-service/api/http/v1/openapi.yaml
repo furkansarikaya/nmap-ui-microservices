@@ -1,0 +1,533 @@
+openapi: 3.0.3
+info:
+  title: Scanner Service API
+  description: API for Nmap Scanner Service
+  version: 1.0.0
+  contact:
+    name: Furkan Sarıkaya
+    url: https://github.com/furkansarikaya
+
+servers:
+  - url: http://localhost:8081
+    description: Local development server
+
+tags:
+  - name: Scans
+    description: Operations related to scans
+  - name: Results
+    description: Operations related to scan results
+  - name: Health
+    description: Health check endpoint
+
+paths:
+  /api/v1/scans:
+    post:
+      summary: Start a new scan
+      description: Initiates a new nmap scan with the provided options
+      tags:
+        - Scans
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanRequest'
+      responses:
+        '202':
+          description: Scan accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Scan started
+                  scan_id:
+                    type: string
+                    format: uuid
+                    example: 123e4567-e89b-12d3-a456-426614174000
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      summary: List scans
+      description: Lists scans with pagination
+      tags:
+        - Scans
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of scans to return
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of scans to skip
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scans:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Scan'
+                  limit:
+                    type: integer
+                    example: 10
+                  offset:
+                    type: integer
+                    example: 0
+                  count:
+                    type: integer
+                    example: 5
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/scans/{id}:
+    get:
+      summary: Get scan by ID
+      description: Retrieves a scan by its ID
+      tags:
+        - Scans
+      parameters:
+        - name: id
+          in: path
+          description: Scan ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scan'
+        '404':
+          description: Scan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Cancel scan
+      description: Cancels a running scan
+      tags:
+        - Scans
+      parameters:
+        - name: id
+          in: path
+          description: Scan ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Scan cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Scan cancelled
+                  scan_id:
+                    type: string
+                    format: uuid
+                    example: 123e4567-e89b-12d3-a456-426614174000
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Scan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/results/{id}:
+    get:
+      summary: Get scan result by ID
+      description: Retrieves a scan result by its ID
+      tags:
+        - Results
+      parameters:
+        - name: id
+          in: path
+          description: Result ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanResult'
+        '404':
+          description: Result not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      summary: Health check
+      description: Checks the health of the service
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  nmap_version:
+                    type: string
+                    example: Nmap version 7.92
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2023-10-31T12:34:56Z
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: unhealthy
+                  error:
+                    type: string
+                    example: Nmap is not available
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2023-10-31T12:34:56Z
+
+components:
+  schemas:
+    ScanRequest:
+      type: object
+      required:
+        - target
+      properties:
+        target:
+          type: string
+          description: Target to scan (IP, hostname, or CIDR)
+          example: 192.168.1.1
+        ports:
+          type: string
+          description: Ports to scan
+          example: 1-1000
+        scan_type:
+          type: string
+          description: Type of scan
+          enum: [SYN, CONNECT, UDP, VERSION, SCRIPT, ALL]
+          default: SYN
+        timing_template:
+          type: integer
+          description: Timing template (0-5)
+          minimum: 0
+          maximum: 5
+          default: 3
+        service_detection:
+          type: boolean
+          description: Enable service detection
+          default: false
+        os_detection:
+          type: boolean
+          description: Enable OS detection
+          default: false
+        script_scan:
+          type: boolean
+          description: Enable script scanning
+          default: false
+        extra_options:
+          type: array
+          description: Extra nmap options
+          items:
+            type: string
+          example: ["--max-retries", "3"]
+        timeout_seconds:
+          type: integer
+          description: Scan timeout in seconds
+          default: 300
+          minimum: 1
+
+    Scan:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        user_id:
+          type: string
+          description: User who initiated the scan
+        options:
+          $ref: '#/components/schemas/ScanOptions'
+        status:
+          type: string
+          description: Current status
+          enum: [PENDING, RUNNING, COMPLETED, FAILED, CANCELLED]
+        progress:
+          type: number
+          description: Progress percentage (0-100)
+          minimum: 0
+          maximum: 100
+        created_at:
+          type: string
+          format: date-time
+          description: When the scan was created
+        started_at:
+          type: string
+          format: date-time
+          description: When the scan started
+        completed_at:
+          type: string
+          format: date-time
+          description: When the scan completed
+        error:
+          type: string
+          description: Error message if failed
+        result_id:
+          type: string
+          format: uuid
+          description: Reference to scan result
+
+    ScanOptions:
+      type: object
+      properties:
+        target:
+          type: string
+          description: Target to scan
+        ports:
+          type: string
+          description: Ports to scan
+        scan_type:
+          type: string
+          description: Type of scan
+        timing_template:
+          type: integer
+          description: Timing template
+        service_detection:
+          type: boolean
+          description: Enable service detection
+        os_detection:
+          type: boolean
+          description: Enable OS detection
+        script_scan:
+          type: boolean
+          description: Enable script scanning
+        extra_options:
+          type: array
+          items:
+            type: string
+          description: Extra options
+        timeout:
+          type: integer
+          description: Timeout in seconds
+
+    ScanResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        scan_id:
+          type: string
+          format: uuid
+          description: Reference to scan
+        user_id:
+          type: string
+          description: User who initiated the scan
+        start_time:
+          type: string
+          format: date-time
+          description: When the scan started
+        end_time:
+          type: string
+          format: date-time
+          description: When the scan ended
+        duration:
+          type: number
+          description: Duration in seconds
+        command:
+          type: string
+          description: Command that was run
+        summary:
+          type: string
+          description: Scan summary
+        total_hosts:
+          type: integer
+          description: Total hosts scanned
+        up_hosts:
+          type: integer
+          description: Hosts that were up
+        hosts:
+          type: array
+          description: Host results
+          items:
+            $ref: '#/components/schemas/Host'
+
+    Host:
+      type: object
+      properties:
+        ip:
+          type: string
+          description: IP address
+        hostnames:
+          type: array
+          description: Hostnames
+          items:
+            type: string
+        status:
+          type: string
+          description: Host status
+        os:
+          type: string
+          description: Operating system
+        ports:
+          type: array
+          description: Open ports
+          items:
+            $ref: '#/components/schemas/Port'
+        scripts:
+          type: array
+          description: Script results
+          items:
+            $ref: '#/components/schemas/Script'
+        metadata:
+          $ref: '#/components/schemas/HostMetadata'
+
+    Port:
+      type: object
+      properties:
+        port:
+          type: integer
+          description: Port number
+        protocol:
+          type: string
+          description: Protocol
+        state:
+          type: string
+          description: Port state
+        service:
+          type: string
+          description: Service name
+        product:
+          type: string
+          description: Product name
+        version:
+          type: string
+          description: Version information
+        extra_info:
+          type: string
+          description: Extra information
+
+    Script:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Script ID
+        output:
+          type: string
+          description: Script output
+        data:
+          type: object
+          additionalProperties:
+            type: string
+          description: Structured data
+
+    HostMetadata:
+      type: object
+      properties:
+        distance:
+          type: integer
+          description: Network distance
+        uptime:
+          type: number
+          description: System uptime in seconds
+        last_boot:
+          type: string
+          format: date-time
+          description: Last boot time
+        tcp_sequence:
+          type: string
+          description: TCP sequence prediction
+        ip_id_sequence:
+          type: string
+          description: IP ID sequence generation
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
