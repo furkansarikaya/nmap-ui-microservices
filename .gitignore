@@ -1,0 +1,110 @@
+# Compiled Go files
+*.o
+*.a
+*.so
+*.exe
+*.exe~
+*.dll
+*.dylib
+
+# Go specific
+*.test
+*.out
+/vendor/
+/go.work
+
+# Binary files
+bin/
+dist/
+
+# Configuration files with sensitive info
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+
+# Build output
+_output/
+build/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.bak
+*~
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Kubernetes & Docker
+*.kubeconfig
+.dockerignore
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+
+# Scanner-specific
+nmap-output/
+scan-results/
+
+# Coverage reports
+coverage/
+*.cover
+*.coverprofile
+
+# Generated code
+*_gen.go
+*_generated.go
+*.pb.go
+*.swagger.json
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
